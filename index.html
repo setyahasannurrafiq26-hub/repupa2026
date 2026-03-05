@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>REPUPA Community</title>
+
+<style>
+
+body{
+margin:0;
+font-family:Arial;
+background:#1e1f22;
+color:white;
+}
+
+header{
+background:#2b2d31;
+padding:15px;
+font-size:20px;
+text-align:center;
+}
+
+.container{
+display:flex;
+flex-wrap:wrap;
+min-height:100vh;
+}
+
+.sidebar{
+width:220px;
+background:#2b2d31;
+padding:10px;
+box-sizing:border-box;
+}
+
+.main{
+flex:1;
+padding:20px;
+box-sizing:border-box;
+}
+
+.card{
+background:#313338;
+padding:15px;
+margin-bottom:15px;
+border-radius:8px;
+}
+
+input{
+padding:6px;
+margin:5px;
+}
+
+button{
+background:#5865f2;
+border:none;
+padding:8px 12px;
+color:white;
+border-radius:5px;
+cursor:pointer;
+}
+
+.member{
+padding:5px;
+border-bottom:1px solid #444;
+}
+
+.comment{
+margin:5px 0;
+}
+
+@media (max-width:700px){
+
+.container{
+flex-direction:column;
+}
+
+.sidebar{
+width:100%;
+}
+
+}
+
+</style>
+</head>
+
+<body>
+
+<header>REPUPA - Remaja Perumahan Permata</header>
+
+<div id="login" class="card" style="margin:20px;">
+<h3>Login Anggota</h3>
+
+<input id="name" placeholder="Nama">
+<input id="pass" placeholder="Password">
+
+<button onclick="login()">Masuk</button>
+</div>
+
+<div id="app" style="display:none;">
+
+<div class="container">
+
+<div class="sidebar">
+
+<h3>Anggota</h3>
+<div id="members"></div>
+
+</div>
+
+<div class="main">
+
+<div class="card">
+<h3>Profil</h3>
+<div id="profile"></div>
+</div>
+
+<div class="card">
+<h3>Tambah Event</h3>
+
+<input id="eventInput" placeholder="Nama event">
+<button onclick="addEvent()">Tambah</button>
+
+</div>
+
+<div class="card">
+<h3>Voting Event</h3>
+<div id="events"></div>
+</div>
+
+<div class="card">
+<h3>Komentar</h3>
+
+<input id="commentInput" placeholder="Tulis komentar">
+<button onclick="addComment()">Kirim</button>
+
+<div id="comments"></div>
+
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+<script>
+
+let members=JSON.parse(localStorage.getItem("members"))||[]
+let events=JSON.parse(localStorage.getItem("events"))||[]
+let comments=JSON.parse(localStorage.getItem("comments"))||[]
+
+let currentUser=null
+
+function save(){
+
+localStorage.setItem("members",JSON.stringify(members))
+localStorage.setItem("events",JSON.stringify(events))
+localStorage.setItem("comments",JSON.stringify(comments))
+
+}
+
+function login(){
+
+let name=document.getElementById("name").value
+let pass=document.getElementById("pass").value
+
+if(!name)return alert("Isi nama")
+
+let user=members.find(m=>m.name===name)
+
+if(!user){
+
+user={
+name:name,
+pass:pass
+}
+
+members.push(user)
+save()
+
+}
+
+currentUser=name
+
+document.getElementById("login").style.display="none"
+document.getElementById("app").style.display="block"
+
+render()
+
+}
+
+function render(){
+
+document.getElementById("profile").innerHTML="Nama: "+currentUser
+
+let memHTML=""
+
+members.forEach(m=>{
+memHTML+=`<div class="member">${m.name}</div>`
+})
+
+document.getElementById("members").innerHTML=memHTML
+
+let evHTML=""
+
+events.forEach((e,i)=>{
+
+let voted=e.voters.includes(currentUser)
+
+evHTML+=`
+
+<div class="card">
+
+<b>${e.name}</b><br>
+Vote: ${e.voters.length}<br>
+
+<button onclick="vote(${i})" ${voted?"disabled":""}>
+Vote
+</button>
+
+</div>
+
+`
+
+})
+
+document.getElementById("events").innerHTML=evHTML
+
+let comHTML=""
+
+comments.forEach(c=>{
+
+comHTML+=`
+<div class="comment">
+<b>${c.user}</b>: ${c.text}
+</div>
+`
+
+})
+
+document.getElementById("comments").innerHTML=comHTML
+
+}
+
+function addEvent(){
+
+let name=document.getElementById("eventInput").value
+
+if(!name)return
+
+events.push({
+name:name,
+voters:[]
+})
+
+save()
+render()
+
+document.getElementById("eventInput").value=""
+
+}
+
+function vote(i){
+
+if(events[i].voters.includes(currentUser))return
+
+events[i].voters.push(currentUser)
+
+save()
+render()
+
+}
+
+function addComment(){
+
+let text=document.getElementById("commentInput").value
+
+if(!text)return
+
+comments.push({
+user:currentUser,
+text:text
+})
+
+save()
+render()
+
+document.getElementById("commentInput").value=""
+
+}
+
+</script>
+
+</body>
+</html>
